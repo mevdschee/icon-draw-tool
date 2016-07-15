@@ -19,7 +19,9 @@
       </marker>
     </defs>
     <rect width="100%" height="100%" fill="url(#grid)" />
-    <path id="drawing" d="" />
+    <path id="path" d="" fill="none" stroke="blue" />
+    <path id="fill" d="" fill="blue" stroke="none" />
+    <path id="points" d="" marker-start="url(#marker)" marker-mid="url(#marker)" marker-end="url(#marker)" stroke="none" fill="none" />
     <rect id="cursor" x="10" y="10" width="4" height="4" stroke="red" fill="none" transform="translate(-2,-2)"/>
     <rect id="point" x="10" y="10" width="2" height="2" stroke="none" fill="red" transform="translate(-1,-1)" />
   </svg>
@@ -33,47 +35,91 @@ var d = document.getElementById('drawing');
 var px = 40;
 var py = 10;
 var points = [[0,10,10],[1,10,40],[1,20,30],[2,50,60],[1,20,90],[1,10,80],[1,10,110],[1,40,110],[1,30,100],[1,60,70],[1,90,100],[1,80,110],[1,110,110],[1,110,80],[1,100,90],[1,70,60],[1,100,30],[1,110,40],[1,110,10],[1,80,10],[1,90,20],[1,60,50],[1,30,20],[1,40,10],[1,40,10]]; 
-var line = 1; // 0=jump 1=draw 2=bend
 var fill = 0;
-var mode = 1; // 0=move 1=draw
 var selected = points.length-2;
+function toggleCurve() {
+  if (selected>=points.length-2) return;
+  var p0=points[selected];
+  var p1=points[selected+1];
+  var p2=points[selected+2];
+  if (p0[0]!=1||p2[0]!=1) return;
+  points.splice(selected+1,1,[(p1[0]==1?2:1),p1[1],p1[2]]);
+}
+function toggleMove() {
+  var p0=points[selected];
+  var p1=points[selected+1];
+  if (p0[0]!=1) return;
+  points.splice(selected+1,1,[(p1[0]==1?0:1),p1[1],p1[2]]);
+}
+function nextPoint() {
+   if (selected+2<points.length) {
+     var p=points[selected+2]; 
+     px=p[1]; 
+     py=p[2];
+   } else {
+     if (point.length<1) return;
+     var p=points[selected];
+     if (px==p[1]&&py==p[2]) return;
+     points.splice(selected+1,0,[1,px,py]); 
+   } 
+   incrementSelected(); 
+}
+function previousPoint() {
+  if (point.length<1) return;
+  var p=points[selected]; 
+  px=p[1];
+  py=p[2];
+  decrementSelected();
+}
+function deletePoint() {
+  if (point.length<1) return;
+  var p=points[selected]; 
+  px=p[1];
+  py=p[2];
+  points.splice(selected,2,[1,px,py]);
+  decrementSelected();
+}
+function duplicatePoint() {
+  if (point.length<1) return;
+  var p=points[selected]; 
+  if (px==p[1]&&py==p[2]) return;
+  px=p[1];
+  py=p[2];
+  points.splice(selected,0,[1,px,py]);
+}
+function incrementSelected() {
+  if (points.length<=1) return;
+  selected=(selected+1)%(points.length-1);
+}
+function decrementSelected() {
+  if (points.length<=1) return;
+  selected=(selected+points.length-2)%(points.length-1);
+}
+
 function onKeyPress(e) {
   var evt = window.event? event : e;
   var key = evt.keyCode? evt.keyCode : evt.charCode;
   console.log(key,'pressed');
-  var step = evt.shiftKey?1:10;
-  if (evt.ctrlKey) {
-    switch(key) {
-      case 37: selected--; px=points[selected][1]; py=points[selected][2]; points.splice(selected,0,[line,px,py]); break;
-      case 39: selected++; break;
-    }
-  } else {
-    switch(key) {
-      case 36: px=10; py=10; break;
-      case 40: py+=step; break;
-      case 38: if (py>=step) py-=step; else py=0; break; 
-      case 37: if (px>=step) px-=step; else px=0; break;
-      case 39: px+=step; break;
-      case 102: fill=(fill==1?0:1); break;
-    }
+  var step = evt.ctrlKey?100:evt.shiftKey?1:10;
+  switch(key) {
+    case 36: px=10; py=10; break;
+    case 40: py+=step; break;
+    case 38: if (py>=step) py-=step; else py=0; break; 
+    case 37: if (px>=step) px-=step; else px=0; break;
+    case 39: px+=step; break;
+    case 102: fill=(fill==1?0:1); break;
   }
-  if (mode==1) {
-    switch(key) {
-      case 8: 
-      case 46: points.splice(selected,1); if (selected>=0){ p=points[selected]; line=p[0]; px=p[1]; py=p[2]; } selected = points.length-2; if (!points.length) line=0; break;
-      case 27: points.splice(selected+1,1); mode=(mode==1?0:1); break;
-      case 32: line=(line==1?0:1); break;
-      case 13: points.splice(selected+1,0,[line?1:0,px,py]); selected += 1; line=1; break;
-    }
-  } else {
-    switch(key) {
-      case 27: if (!confirm('Are you sure?')) return; points=[]; line=0; fill=0; selected=-1;
-      case 13: mode=(mode==1?0:1); points.splice(selected+2,0,[line?1:0,px,py]); break;
-    }
+  switch(key) {
+    case 8: previousPoint(); break;
+    case 46: deletePoint(); break;
+    case 13: nextPoint(); break;
+    case 100: duplicatePoint(); break; 
+    case 99: toggleCurve(); break;
+    case 109: toggleMove(); break;
+    case 27: if (!confirm('Are you sure?')) return; points=[[0,px,py],[1,px,py]]; fill=0; selected=0; break;
   }
-  if (mode==1) {
-    points.splice(selected+1,1,[line,px,py]);
-  }
+  p=points[selected+1];
+  points.splice(selected+1,1,[p?p[0]:1,px,py]);
   draw();
 }
 function getControlPoints(x0,y0,x1,y1,x2,y2,t){
@@ -92,7 +138,7 @@ function draw() {
   var x=0,y=0;
   for (var i=0;i<points.length;i++) {
     if (i>1 && points[i-1][0]==2) {
-      var coords = getControlPoints(points[i-2][1],points[i-2][2],points[i-1][1],points[i-1][2],points[i][1],points[i][2],.5);
+      var coords = getControlPoints(points[i-2][1],points[i-2][2],points[i-1][1],points[i-1][2],points[i][1],points[i][2],.55);
       path+='C'+coords.join(',')+',';
     }
     else switch(points[i][0]) {
@@ -102,18 +148,15 @@ function draw() {
     }
     path+=points[i][1]+','+points[i][2];
   }
-  $('#drawing').attr('d',path+' ');
-  $('#drawing').attr('fill',fill?'blue':'none');
-  $('#drawing').attr('stroke',fill?'none':'blue');
-  $('#drawing').attr('marker-start',fill?'none':'url(#marker)');
-  $('#drawing').attr('marker-mid',fill?'none':'url(#marker)');
-  if (selected>=0) {
+  $('#path').attr('d',fill?'':path);
+  $('#fill').attr('d',fill?path:'');
+  $('#points').attr('d',fill?'':path);
+  if (points.length>=2) {
     var p = points[selected];
     $('#point').attr('x',p[1]).attr('y',p[2]);
-  } else {
-    $('#point').attr('x',px).attr('y',py);
+    var p = points[selected+1];
+    $('#line').text(p[0]==1?'L':p[0]==2?'C':'M');
   }
-  $('#line').text(line==1?'L':'M');
   $('#mode').text(mode==1?'draw':'move');
   $('#position').text(px+','+py);
   $('#cursor').attr('x',px).attr('y',py);
