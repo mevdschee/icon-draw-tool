@@ -1,0 +1,103 @@
+<html>
+<head>
+<title>Icon Draw Tool</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.1.6/zepto.min.js"></script>
+</head>
+<body style="margin:0; width: 100%;">
+  <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" transform="scale(3)">
+    <defs>
+      <pattern id="smallGrid" width="10" height="10" patternUnits="userSpaceOnUse">
+        <path d="M 10 0 L 0 0 0 10" fill="none" stroke="gray" stroke-width="0.5"/>
+      </pattern>
+      <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+        <rect width="100" height="100" fill="url(#smallGrid)"/>
+        <path d="M 100 0 L 0 0 0 100" fill="none" stroke="gray" stroke-width="1"/>
+      </pattern>
+      <marker id="marker" refX="1" refY="1">
+        <rect width="2" height="2" fill="blue" />
+      </marker>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#grid)" />
+    <path id="drawing" d="" />
+    <rect id="cursor" x="10" y="10" width="4" height="4" stroke="red" fill="none" transform="translate(-2,-2)"/>
+    <rect id="point" x="10" y="10" width="2" height="2" stroke="none" fill="red" transform="translate(-1,-1)" />
+  </svg>
+<div style="position: fixed; bottom:0; width: 100%; background-color: rgba(155,155,155,.7); padding: 5px;">
+Pos: <span id="position">10,10</span> &nbsp; &nbsp;
+Line: <span id="line">L</span> &nbsp; &nbsp;
+Mode: <span id="mode">draw</span> &nbsp; &nbsp;
+</div><script>
+var e = document.getElementById('input');
+var d = document.getElementById('drawing');
+var px = 10;
+var py = 10;
+var points = [[0,10,10],[1,10,40],[1,20,30],[1,50,60],[1,20,90],[1,10,80],[1,10,110],[1,40,110],[1,30,100],[1,60,70],[1,90,100],[1,80,110],[1,110,110],[1,110,80],[1,100,90],[1,70,60],[1,100,30],[1,110,40],[1,110,10],[1,80,10],[1,90,20],[1,60,50],[1,30,20],[1,40,10]]; 
+var line = 1;
+var fill = 0;
+var mode = 1; // 0=move 1=draw
+var selected = -1;
+function onKeyPress(e) {
+  var evt = window.event? event : e;
+  var key = evt.keyCode? evt.keyCode : evt.charCode;
+  console.log(key,'pressed');
+  var step = (evt.ctrlKey?100:(evt.shiftKey?1:10));
+  switch(key) {
+    case 36: px=10; py=10; break;
+    case 40: py+=step; break;
+    case 38: if (py>=step) py-=step; else py=0; break; 
+    case 37: if (px>=step) px-=step; else px=0; break;
+    case 39: px+=step; break;
+    case 102: fill=(fill==1?0:1); break;
+  }
+  if (mode==1) {
+    switch(key) {
+      case 8: 
+      case 46: points.pop(); p=points.pop(); line=p[0]; px=p[1]; py=p[2]; points.push(p); selected = points.length-2; if (!points.length) line=0; break;
+      case 27: points.pop(); mode=(mode==1?0:1); break;
+      case 32: line=(line==1?0:1); break;
+      case 13: points.push([line?1:0,px,py]); selected = points.length-2; line=1; break;
+    }
+  } else {
+    switch(key) {
+      case 27: if (!confirm('Are you sure?')) return; points=[]; line=0; fill=0; selected=-1;
+      case 13: mode=(mode==1?0:1); points.push([line?1:0,px,py]); break;
+    }
+  }
+  if (mode==1) {
+    points.pop();
+    points.push([line,px,py]);
+  }
+  draw();
+}
+function draw() {
+  var path='';
+  for (var i=0;i<points.length;i++) {
+    switch(points[i][0]) {
+      case 0: path+='M'; break;
+      case 1: path+='L'; break;
+    }
+    path+=points[i][1];
+    path+=',';
+    path+=points[i][2];
+  }
+  $('#drawing').attr('d',path+' ');
+  $('#drawing').attr('fill',fill?'blue':'none');
+  $('#drawing').attr('stroke',fill?'none':'blue');
+  $('#drawing').attr('marker-start',fill?'none':'url(#marker)');
+  $('#drawing').attr('marker-mid',fill?'none':'url(#marker)');
+  if (selected>=0) {
+    var p = points[selected];
+    $('#point').attr('x',p[1]).attr('y',p[2]);
+  } else {
+    $('#point').attr('x',px).attr('y',py);
+  }
+  $('#line').text(line==1?'L':'M');
+  $('#mode').text(mode==1?'draw':'move');
+  $('#position').text(px+','+py);
+  $('#cursor').attr('x',px).attr('y',py);
+}
+document.onkeypress = onKeyPress;
+draw();
+</script>
+</body>
+</html>
