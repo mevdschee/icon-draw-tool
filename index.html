@@ -41,14 +41,21 @@ function onKeyPress(e) {
   var evt = window.event? event : e;
   var key = evt.keyCode? evt.keyCode : evt.charCode;
   console.log(key,'pressed');
-  var step = (evt.ctrlKey?100:(evt.shiftKey?1:10));
-  switch(key) {
-    case 36: px=10; py=10; break;
-    case 40: py+=step; break;
-    case 38: if (py>=step) py-=step; else py=0; break; 
-    case 37: if (px>=step) px-=step; else px=0; break;
-    case 39: px+=step; break;
-    case 102: fill=(fill==1?0:1); break;
+  var step = evt.shiftKey?1:10;
+  if (evt.ctrlKey) {
+    switch(key) {
+      case 37: selected--; px=points[selected][1]; py=points[selected][2]; points.splice(selected,0,[line,px,py]); break;
+      case 39: selected++; break;
+    }
+  } else {
+    switch(key) {
+      case 36: px=10; py=10; break;
+      case 40: py+=step; break;
+      case 38: if (py>=step) py-=step; else py=0; break; 
+      case 37: if (px>=step) px-=step; else px=0; break;
+      case 39: px+=step; break;
+      case 102: fill=(fill==1?0:1); break;
+    }
   }
   if (mode==1) {
     switch(key) {
