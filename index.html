@@ -32,68 +32,74 @@ Mode: <span id="mode">draw</span> &nbsp; &nbsp;
 </div><script>
 var e = document.getElementById('input');
 var d = document.getElementById('drawing');
+var modes = ['M','L','Q','C'];
 var px = 40;
 var py = 10;
-var points = [[0,10,10],[1,10,40],[1,20,30],[2,50,60],[1,20,90],[1,10,80],[1,10,110],[1,40,110],[1,30,100],[1,60,70],[1,90,100],[1,80,110],[1,110,110],[1,110,80],[1,100,90],[1,70,60],[1,100,30],[1,110,40],[1,110,10],[1,80,10],[1,90,20],[1,60,50],[1,30,20],[1,40,10],[1,40,10]]; 
+//var points = [[0,10,10],[1,10,40],[1,20,30],[1,50,60],[1,20,90],[1,10,80],[1,10,110],[1,40,110],[1,30,100],[1,60,70],[1,90,100],[1,80,110],[1,110,110],[1,110,80],[1,100,90],[1,70,60],[1,100,30],[1,110,40],[1,110,10],[1,80,10],[1,90,20],[1,60,50],[1,30,20],[1,40,10],[1,40,10]]; 
+var points = [[0,10,10],[1,10,40],[1,20,30],[2,20,90,50,60],[1,10,80],[1,10,110],[1,40,110],[1,30,100],[1,60,70],[1,90,100],[1,80,110],[1,110,110],[1,110,80],[1,100,90],[1,70,60],[1,100,30],[1,110,40],[1,110,10],[1,80,10],[1,90,20],[1,60,50],[1,30,20],[1,40,10],[1,40,10]]; 
 var fill = 0;
-var selected = points.length-2;
-function toggleCurve() {
-  if (selected>=points.length-2) return;
-  var p0=points[selected];
-  var p1=points[selected+1];
-  var p2=points[selected+2];
-  if (p0[0]!=1||p2[0]!=1) return;
-  points.splice(selected+1,1,[(p1[0]==1?2:1),p1[1],p1[2]]);
+var selected = points.length-1;
+function getFirstCurveDefault(p1,p2) {
+  return [0,p1[1],p2[2]];
 }
-function toggleMove() {
-  var p0=points[selected];
-  var p1=points[selected+1];
-  if (p0[0]!=1) return;
-  points.splice(selected+1,1,[(p1[0]==1?0:1),p1[1],p1[2]]);
+function getSecondCurveDefault(p1,p2) {
+  return [0,p2[1],p1[2]];
+}
+function toggleMode() {
+  if (selected<1) {
+    points[selected][0] = 0;
+  } else {
+    points[selected][0]++;
+    points[selected][0]%=modes.length;
+    if (points[selected][0]>=2 && points[selected].length<5) {
+      var p = getFirstCurveDefault(points[selected-1],points[selected]);
+      points[selected][3] = p[1];
+      points[selected][4] = p[2];
+    } 
+    if (points[selected][0]>=3 && points[selected].length<7) {
+      var p = getSecondCurveDefault(points[selected-1],points[selected]);
+      points[selected][5] = p[1];
+      points[selected][6] = p[2];
+    }
+  }
 }
 function nextPoint() {
-   if (selected+2<points.length) {
-     var p=points[selected+2]; 
-     px=p[1]; 
-     py=p[2];
+   if (selected+1<points.length) {
+     incrementSelected();
+     px=points[selected][1];
+     py=points[selected][2];
    } else {
-     if (point.length<1) return;
-     var p=points[selected];
-     if (px==p[1]&&py==p[2]) return;
-     points.splice(selected+1,0,[1,px,py]); 
+     // prevent double entry
+     if (selected-1>=0 && px==points[selected-1][1] && py==points[selected-1][2]) return;
+     points.push([1,px,py]); 
+     incrementSelected();
    } 
-   incrementSelected(); 
 }
 function previousPoint() {
-  if (point.length<1) return;
-  var p=points[selected]; 
-  px=p[1];
-  py=p[2];
   decrementSelected();
+  px=points[selected][1];
+  py=points[selected][2];
 }
 function deletePoint() {
-  if (point.length<1) return;
-  var p=points[selected]; 
-  px=p[1];
-  py=p[2];
-  points.splice(selected,2,[1,px,py]);
+  points.splice(selected,1);
   decrementSelected();
+  px=points[selected][1];
+  py=points[selected][2];
 }
 function duplicatePoint() {
-  if (point.length<1) return;
   var p=points[selected]; 
   if (px==p[1]&&py==p[2]) return;
   px=p[1];
   py=p[2];
-  points.splice(selected,0,[1,px,py]);
+  points.splice(selected,0,p);
 }
 function incrementSelected() {
-  if (points.length<=1) return;
-  selected=(selected+1)%(points.length-1);
+  if (points.length==0) return;
+  selected=(selected+1)%(points.length);
 }
 function decrementSelected() {
-  if (points.length<=1) return;
-  selected=(selected+points.length-2)%(points.length-1);
+  if (points.length==0) return;
+  selected=(selected+points.length-1)%(points.length);
 }
 
 function onKeyPress(e) {
@@ -108,18 +114,15 @@ function onKeyPress(e) {
     case 37: if (px>=step) px-=step; else px=0; break;
     case 39: px+=step; break;
     case 102: fill=(fill==1?0:1); break;
-  }
-  switch(key) {
     case 8: previousPoint(); break;
     case 46: deletePoint(); break;
     case 13: nextPoint(); break;
     case 100: duplicatePoint(); break; 
-    case 99: toggleCurve(); break;
-    case 109: toggleMove(); break;
-    case 27: if (!confirm('Are you sure?')) return; points=[[0,px,py],[1,px,py]]; fill=0; selected=0; break;
+    case 32: toggleMode(); break;
+    case 27: if (!confirm('Are you sure?')) return; points=[[0,px,py]]; fill=0; selected=0; break;
   }
-  p=points[selected+1];
-  points.splice(selected+1,1,[p?p[0]:1,px,py]);
+  points[selected][1]=px;
+  points[selected][2]=py;
   draw();
 }
 function getControlPoints(x0,y0,x1,y1,x2,y2,t){
@@ -135,28 +138,25 @@ function getControlPoints(x0,y0,x1,y1,x2,y2,t){
 }
 function draw() {
   var path='';
-  var x=0,y=0;
   for (var i=0;i<points.length;i++) {
-    if (i>1 && points[i-1][0]==2) {
-      var coords = getControlPoints(points[i-2][1],points[i-2][2],points[i-1][1],points[i-1][2],points[i][1],points[i][2],.55);
-      path+='C'+coords.join(',')+',';
+    var p = points[i];
+    path+=modes[p[0]];
+    switch(p[0]) {
+      case 0: path+=p[1]+','+p[2]; break;
+      case 1: path+=p[1]+','+p[2]; break;
+      case 2: path+=p[3]+','+p[4]+','+p[1]+','+p[2]; break;
+      case 3: path+=p[3]+','+p[4]+','+p[5]+','+p[6]+','+p[1]+','+p[2];break;
     }
-    else switch(points[i][0]) {
-      case 0: path+='M'; break;
-      case 1: path+='L'; break;
-      case 2: continue;
-    }
-    path+=points[i][1]+','+points[i][2];
   }
   $('#path').attr('d',fill?'':path);
   $('#fill').attr('d',fill?path:'');
   $('#points').attr('d',fill?'':path);
-  if (points.length>=2) {
-    var p = points[selected];
-    $('#point').attr('x',p[1]).attr('y',p[2]);
-    var p = points[selected+1];
-    $('#line').text(p[0]==1?'L':p[0]==2?'C':'M');
+  if (points[selected][0]==0) {
+    $('#point').attr('x',points[selected][1]).attr('y',points[selected][2]);
+  } else {
+    $('#point').attr('x',points[selected-1][1]).attr('y',points[selected-1][2]);
   }
+  $('#line').text(modes[points[selected][0]]);
   $('#mode').text(mode==1?'draw':'move');
   $('#position').text(px+','+py);
   $('#cursor').attr('x',px).attr('y',py);
