@@ -19,11 +19,10 @@
       </marker>
     </defs>
     <rect width="100%" height="100%" fill="url(#grid)" />
+    <path id="points" d="" marker-start="url(#marker)" marker-mid="url(#marker)" marker-end="url(#marker)" stroke="silver" fill="none" />
     <path id="path" d="" marker-start="url(#marker)" marker-mid="url(#marker)" marker-end="url(#marker)" fill="none" stroke="blue" />
     <path id="fill" d="" fill="blue" stroke="none" />
-    <path id="points" d="" marker-start="url(#marker)" marker-mid="url(#marker)" marker-end="url(#marker)" stroke="none" fill="none" />
     <rect id="cursor" x="10" y="10" width="4" height="4" stroke="red" fill="none" transform="translate(-2,-2)"/>
-    <path id="" d="" marker-start="url(#marker)" marker-mid="url(#marker)" marker-end="url(#marker)" stroke="none" fill="none" />
     <rect id="point" x="10" y="10" width="2" height="2" stroke="none" fill="red" transform="translate(-1,-1)" />
   </svg>
 <div style="position: fixed; bottom:0; width: 100%; background-color: rgba(155,155,155,.7); padding: 5px;">
@@ -151,12 +150,25 @@ function draw() {
   }
   $('#path').attr('d',fill?'':path);
   $('#fill').attr('d',fill?path:'');
-  //$('#points').attr('d',fill?'':path);
+  path='';
   if (points[selected][0]==0) {
     $('#point').attr('x',points[selected][1]).attr('y',points[selected][2]);
   } else {
     $('#point').attr('x',points[selected-1][1]).attr('y',points[selected-1][2]);
   }
+  if (points[selected][0]==2) {
+    path+='M'+points[selected-1][1]+','+points[selected-1][2];
+    path+='L'+points[selected][3]+','+points[selected][4];
+    path+='M'+points[selected][1]+','+points[selected][2];
+    path+='L'+points[selected][3]+','+points[selected][4];
+  }
+  if (points[selected][0]==3) {
+    path+='M'+points[selected-1][1]+','+points[selected-1][2];
+    path+='L'+points[selected][3]+','+points[selected][4];
+    path+='M'+points[selected][1]+','+points[selected][2];
+    path+='L'+points[selected][5]+','+points[selected][6];
+  }
+  $('#points').attr('d',fill?'':path);
   $('#line').text(modes[points[selected][0]]);
   $('#mode').text(mode==1?'draw':'move');
   $('#position').text(px+','+py);
