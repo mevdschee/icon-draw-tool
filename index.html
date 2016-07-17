@@ -32,7 +32,7 @@ Mode: <span id="mode">draw</span> &nbsp; &nbsp;
 </div><script>
 var e = document.getElementById('input');
 var d = document.getElementById('drawing');
-var modes = ['M','L','Q','C'];
+var modes = ['M','L','T','Q','S','C'];
 var px = 40;
 var py = 10;
 //var points = [[0,10,10],[1,10,40],[1,20,30],[1,50,60],[1,20,90],[1,10,80],[1,10,110],[1,40,110],[1,30,100],[1,60,70],[1,90,100],[1,80,110],[1,110,110],[1,110,80],[1,100,90],[1,70,60],[1,100,30],[1,110,40],[1,110,10],[1,80,10],[1,90,20],[1,60,50],[1,30,20],[1,40,10],[1,40,10]]; 
@@ -51,12 +51,12 @@ function toggleMode() {
   } else {
     points[selected][0]++;
     points[selected][0]%=modes.length;
-    if (points[selected][0]>=2 && points[selected].length<5) {
+    if (points[selected][0]>=3 && points[selected].length<5) {
       var p = getFirstCurveDefault(points[selected-1],points[selected]);
       points[selected][3] = p[1];
       points[selected][4] = p[2];
     } 
-    if (points[selected][0]>=3 && points[selected].length<7) {
+    if (points[selected][0]>=5 && points[selected].length<7) {
       var p = getSecondCurveDefault(points[selected-1],points[selected]);
       points[selected][5] = p[1];
       points[selected][6] = p[2];
@@ -137,8 +137,10 @@ function draw() {
     switch(p[0]) {
       case 0: path+=p[1]+','+p[2]; break;
       case 1: path+=p[1]+','+p[2]; break;
-      case 2: path+=p[3]+','+p[4]+','+p[1]+','+p[2]; break;
-      case 3: path+=p[3]+','+p[4]+','+p[5]+','+p[6]+','+p[1]+','+p[2];break;
+      case 2: path+=p[1]+','+p[2]; break;
+      case 3: path+=p[3]+','+p[4]+','+p[1]+','+p[2]; break;
+      case 4: path+=p[3]+','+p[4]+','+p[1]+','+p[2]; break;
+      case 5: path+=p[3]+','+p[4]+','+p[5]+','+p[6]+','+p[1]+','+p[2];break;
     }
   }
   $('#path').attr('d',fill?'':path);
@@ -149,13 +151,13 @@ function draw() {
   } else {
     $('#point').attr('x',points[selected-1][1]).attr('y',points[selected-1][2]);
   }
-  if (points[selected][0]==2) {
+  if (points[selected][0]==3 || points[selected][0]==4) {
     path+='M'+points[selected-1][1]+','+points[selected-1][2];
     path+='L'+points[selected][3]+','+points[selected][4];
     path+='M'+points[selected][1]+','+points[selected][2];
     path+='L'+points[selected][3]+','+points[selected][4];
   }
-  if (points[selected][0]==3) {
+  if (points[selected][0]==5) {
     path+='M'+points[selected-1][1]+','+points[selected-1][2];
     path+='L'+points[selected][3]+','+points[selected][4];
     path+='M'+points[selected][1]+','+points[selected][2];
