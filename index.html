@@ -34,42 +34,61 @@ var lengths = [1,1,2,3];
 var px = 40;
 var py = 10;
 //var points = [[0,10,10],[1,10,40],[1,20,30],[1,50,60],[1,20,90],[1,10,80],[1,10,110],[1,40,110],[1,30,100],[1,60,70],[1,90,100],[1,80,110],[1,110,110],[1,110,80],[1,100,90],[1,70,60],[1,100,30],[1,110,40],[1,110,10],[1,80,10],[1,90,20],[1,60,50],[1,30,20],[1,40,10],[1,40,10]]; 
-var points = [[0,10,10],[1,10,40],[1,20,30],[2,20,90,50,60],[1,10,80],[1,10,110],[1,40,110],[1,30,100],[1,60,70],[1,90,100],[1,80,110],[1,110,110],[1,110,80],[1,100,90],[1,70,60],[1,100,30],[1,110,40],[1,110,10],[1,80,10],[1,90,20],[1,60,50],[1,30,20],[1,40,10],[1,40,10]]; 
+var points = [[0,10,10],[1,10,40],[1,20,30],[2,50,60,20,90],[1,10,80],[1,10,110],[1,40,110],[1,30,100],[1,60,70],[1,90,100],[1,80,110],[1,110,110],[1,110,80],[1,100,90],[1,70,60],[1,100,30],[1,110,40],[1,110,10],[1,80,10],[1,90,20],[1,60,50],[1,30,20],[1,40,10],[1,40,10]]; 
 var fill = 0;
 var selected = points.length-1;
 var point = 0;
-
+function getX(p) {
+  var i = lengths[p[0]]-1;
+  return p[1+i*2];
+}
+function getY(p) {
+  var i = lengths[p[0]]-1;
+  return p[2+i*2];
+}
 function getFirstCurveDefault(p1,p2) {
-  return [0,p1[1],p2[2]];
+  var dx=(getX(p2)-getX(p1))/2;
+  var dy=(getY(p2)-getY(p1))/2;
+  var x=getX(p1)+dx-dy;
+  var y=getY(p1)+dy+dx;
+  return [0,x,y];
 }
 function getSecondCurveDefault(p1,p2) {
-  return [0,p2[1],p1[2]];
+  var dx=(getX(p2)-getX(p1))/2;
+  var dy=(getY(p2)-getY(p1))/2;
+  var x=getX(p1)+dx+dy;
+  var y=getY(p1)+dy-dx;
+  return [0,x,y];
 }
 function toggleMode() {
-  if (selected<1) {
-    points[selected][0] = 0;
-  } else {
-    points[selected][0]++;
-    points[selected][0]%=modes.length;
-    if (points[selected][0]>=2 && points[selected].length<5) {
-      var p = getFirstCurveDefault(points[selected-1],points[selected]);
-      points[selected][3] = p[1];
-      points[selected][4] = p[2];
-    } 
-    if (points[selected][0]>=3 && points[selected].length<7) {
-      var p = getSecondCurveDefault(points[selected-1],points[selected]);
-      points[selected][5] = p[1];
-      points[selected][6] = p[2];
-    }
+  if (selected>=1) {
+    var mode = (points[selected][0]+1)%modes.length;
+    var x = getX(points[selected]);
+    var y = getY(points[selected]);
+    var p0 = getFirstCurveDefault(points[selected-1],points[selected]);
+    var p1 = getSecondCurveDefault(points[selected-1],points[selected]);
+    var p = [mode];
+    if (mode==2) p.push(p0[1],p0[2]);
+    if (mode==3) p.push(p0[1],p0[2],p1[1],p1[2]);
+    p.push(x,y);
+    point = lengths[mode]-1;
+    points[selected]=p;
   }
+}
+function next() {
+  if (!nextControlPoint()) nextPoint();
+}
+function previous() {
+  if (!previousControlPoint()) previousPoint();
 }
 function nextPoint() {
    if (selected+1<points.length) {
      incrementSelected();
      point=0;
-     px=points[selected][1];
-     py=points[selected][2];
+     px=points[selected][point*2+1];
+     py=points[selected][point*2+2];
    } else {
+     setControlPoint(lengths[points[selected][0]]-1);
      // prevent double entry
      if (selected-1>=0 && px==points[selected-1][1] && py==points[selected-1][2]) return;
      points.push([1,px,py]); 
@@ -77,23 +96,34 @@ function nextPoint() {
      point=0;
    } 
 }
-function selectControlPoint(num) {
-  point = point==num?0:num;
-  px=points[selected][point*2+1];
-  py=points[selected][point*2+2];  
-}
 function previousPoint() {
   decrementSelected();
-  point=0;
-  px=points[selected][1];
-  py=points[selected][2];
+  point=lengths[points[selected][0]]-1;
+  px=points[selected][point*2+1];
+  py=points[selected][point*2+2];
+}
+function setControlPoint(num) {
+  if (num<0) num=0;
+  if (num>=lengths[points[selected][0]]) num=lengths[points[selected][0]]-1;
+  if (num==point) return false;
+  point=num;
+  px=points[selected][point*2+1];
+  py=points[selected][point*2+2];
+  return true;  
+}
+function nextControlPoint() {
+  return setControlPoint(point+1);
+}
+function previousControlPoint() {
+  return setControlPoint(point-1);
 }
 function deletePoint() {
   if (points.length>1) points.splice(selected,1);
   if (selected>=points.length) decrementSelected();
   if (selected==0) points[selected][0]=0;
-  px=points[selected][1];
-  py=points[selected][2];
+  point=lengths[points[selected][0]]-1;
+  px=points[selected][point*2+1];
+  py=points[selected][point*2+2];
 }
 function duplicatePoint() {
   var p=points[selected-1]; 
@@ -122,17 +152,14 @@ function onKeyPress(e) {
   console.log(key,'pressed');
   var step = evt.ctrlKey?100:evt.shiftKey?1:10;
   switch(key) {
-    case 49: 
-    case 50: 
-    case 51: selectControlPoint(key-48); break;
     case 40: py+=step; break;
     case 38: if (py>=step) py-=step; else py=0; break; 
     case 37: if (px>=step) px-=step; else px=0; break;
     case 39: px+=step; break;
     case 102: fill=(fill==1?0:1); break;
-    case 8: previousPoint(); break;
+    case 8: previous(); break;
     case 46: deletePoint(); break;
-    case 13: nextPoint(); break;
+    case 13: next(); break;
     case 100: duplicatePoint(); break; 
     case 32: toggleMode(); break;
     case 27: reset(); break;
@@ -149,29 +176,29 @@ function draw() {
     switch(p[0]) {
       case 0: path+=p[1]+','+p[2]; break;
       case 1: path+=p[1]+','+p[2]; break;
-      case 2: path+=p[3]+','+p[4]+' '+p[1]+','+p[2]; break;
-      case 3: path+=p[3]+','+p[4]+' '+p[5]+','+p[6]+' '+p[1]+','+p[2];break;
+      case 2: path+=p[1]+','+p[2]+' '+p[3]+','+p[4]; break;
+      case 3: path+=p[1]+','+p[2]+' '+p[3]+','+p[4]+' '+p[5]+','+p[6]; break;
     }
   }
   $('#path').attr('d',fill?'':path);
   $('#fill').attr('d',fill?path:'');
   path='';
   if (points[selected][0]==0) {
-    $('#point').attr('x',points[selected][1]).attr('y',points[selected][2]);
+    $('#point').attr('x',getX(points[selected])).attr('y',getY(points[selected]));
   } else {
-    $('#point').attr('x',points[selected-1][1]).attr('y',points[selected-1][2]);
+    $('#point').attr('x',getX(points[selected-1])).attr('y',getY(points[selected-1]));
   }
   if (points[selected][0]==2) {
-    path+='M'+points[selected-1][1]+','+points[selected-1][2];
-    path+='L'+points[selected][3]+','+points[selected][4];
-    path+='M'+points[selected][1]+','+points[selected][2];
-    path+='L'+points[selected][3]+','+points[selected][4];
+    path+='M'+getX(points[selected-1])+','+getY(points[selected-1]);
+    path+='L'+points[selected][1]+','+points[selected][2];
+    path+='M'+getX(points[selected])+','+getY(points[selected]);
+    path+='L'+points[selected][1]+','+points[selected][2];
   }
   if (points[selected][0]==3) {
-    path+='M'+points[selected-1][1]+','+points[selected-1][2];
+    path+='M'+getX(points[selected-1])+','+getY(points[selected-1]);
+    path+='L'+points[selected][1]+','+points[selected][2];
+    path+='M'+getX(points[selected])+','+getY(points[selected]);
     path+='L'+points[selected][3]+','+points[selected][4];
-    path+='M'+points[selected][1]+','+points[selected][2];
-    path+='L'+points[selected][5]+','+points[selected][6];
   }
   $('#points').attr('d',fill?'':path);
   $('#cursor').attr('x',px).attr('y',py);
@@ -181,15 +208,12 @@ function updatePanel() {
   var segments=[];
   for (var i=0;i<points.length;i++) {
     var p = points[i];
-    var segment=modes[p[0]]+' ';
-    if (i==selected) segment+='<span style="color: red;">';
-    segment+=p[1]+','+p[2];
-    if (i==selected) segment+='</span>';
-    switch(p[0]) {
-      case 0: break;
-      case 1: break;
-      case 2: segment+="\n  "+p[3]+','+p[4]; break;
-      case 3: segment+="\n  "+p[3]+','+p[4]+"\n  "+p[5]+','+p[6]; break;
+    var segment='';
+    for (var j=0;j<lengths[p[0]];j++) {
+      segment+=(j==0?modes[p[0]]:"\n ")+' ';
+      if (i==selected && j==point) segment+='<span style="color: red;">';
+      segment+=p[1+j*2]+','+p[2+j*2];
+      if (i==selected && j==point) segment+='</span>';
     }
     segments[i]=segment;
   }
