@@ -49,15 +49,15 @@ function getY(p) {
 function getFirstCurveDefault(p1,p2) {
   var dx=(getX(p2)-getX(p1))/2;
   var dy=(getY(p2)-getY(p1))/2;
-  var x=getX(p1)+dx-dy;
-  var y=getY(p1)+dy+dx;
+  var x=getX(p1)+Math.floor(dx/10)*10-10;
+  var y=getY(p1)+Math.ceil(dy/10)*10+10;
   return [0,x,y];
 }
 function getSecondCurveDefault(p1,p2) {
   var dx=(getX(p2)-getX(p1))/2;
   var dy=(getY(p2)-getY(p1))/2;
-  var x=getX(p1)+dx+dy;
-  var y=getY(p1)+dy-dx;
+  var x=getX(p1)+Math.floor(dx/10)*10+10;
+  var y=getY(p1)+Math.ceil(dy/10)*10-10;
   return [0,x,y];
 }
 function toggleMode() {
@@ -126,11 +126,14 @@ function deletePoint() {
   py=points[selected][point*2+2];
 }
 function duplicatePoint() {
-  var p=points[selected-1]; 
-  if (px==p[1]&&py==p[2]) return;
-  px=(p[1]+px)/2;
-  py=(p[2]+py)/2;
-  points.splice(selected,0,p.slice(0));
+  var p=points[selected-1];
+  var x=getX(p);
+  var y=getY(p) 
+  if (px==x&&py==y) return;
+  point=0;
+  px=(x+px)/2;
+  py=(y+py)/2;
+  points.splice(selected,0,[1,px,py]);
 }
 function incrementSelected() {
   if (points.length==0) return;
