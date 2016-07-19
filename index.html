@@ -47,21 +47,17 @@ function getY(p) {
   return p[2+i*2];
 }
 function getFirstCurveDefault(p1,p2) {
-  var dx=(getX(p2)-getX(p1))/2;
-  var dy=(getY(p2)-getY(p1))/2;
-  dx=Math.floor(dx/10)*10;
-  dy=Math.floor(dy/10)*10;
-  var x=getX(p1)+dx-10;
-  var y=getY(p1)+dy+10;
+  var dx=Math.round((getX(p2)-getX(p1))/2);
+  var dy=Math.round((getY(p2)-getY(p1))/2);
+  var x=getX(p1)+dx-dy;
+  var y=getY(p1)+dy+dx;
   return [0,x,y];
 }
 function getSecondCurveDefault(p1,p2) {
-  var dx=(getX(p2)-getX(p1))/2;
-  var dy=(getY(p2)-getY(p1))/2;
-  dx=Math.ceil(dx/10)*10;
-  dy=Math.ceil(dy/10)*10;
-  var x=getX(p1)+dx+10;
-  var y=getY(p1)+dy-10;
+  var dx=Math.round((getX(p2)-getX(p1))/2);
+  var dy=Math.round((getY(p2)-getY(p1))/2);
+  var x=getX(p1)+dx+dy;
+  var y=getY(p1)+dy-dx;
   return [0,x,y];
 }
 function toggleMode() {
@@ -94,7 +90,7 @@ function nextPoint() {
    } else {
      setControlPoint(lengths[points[selected][0]]-1);
      // prevent double entry
-     if (selected-1>=0 && px==points[selected-1][1] && py==points[selected-1][2]) return;
+     if (selected-1>=0 && px==getX(points[selected-1]) && py==getY(points[selected-1])) return;
      points.push([1,px,py]); 
      incrementSelected();
      point=0;
@@ -135,8 +131,8 @@ function duplicatePoint() {
   var y=getY(p) 
   if (px==x&&py==y) return;
   point=0;
-  px=(x+px)/2;
-  py=(y+py)/2;
+  px=Math.round((x+px)/2);
+  py=Math.round((y+py)/2);
   points.splice(selected,0,[1,px,py]);
 }
 function incrementSelected() {
