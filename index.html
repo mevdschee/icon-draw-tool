@@ -49,15 +49,19 @@ function getY(p) {
 function getFirstCurveDefault(p1,p2) {
   var dx=(getX(p2)-getX(p1))/2;
   var dy=(getY(p2)-getY(p1))/2;
-  var x=getX(p1)+Math.floor(dx/10)*10-10;
-  var y=getY(p1)+Math.ceil(dy/10)*10+10;
+  dx=Math.floor(dx/10)*10;
+  dy=Math.floor(dy/10)*10;
+  var x=getX(p1)+dx-10;
+  var y=getY(p1)+dy+10;
   return [0,x,y];
 }
 function getSecondCurveDefault(p1,p2) {
   var dx=(getX(p2)-getX(p1))/2;
   var dy=(getY(p2)-getY(p1))/2;
-  var x=getX(p1)+Math.floor(dx/10)*10+10;
-  var y=getY(p1)+Math.ceil(dy/10)*10-10;
+  dx=Math.ceil(dx/10)*10;
+  dy=Math.ceil(dy/10)*10;
+  var x=getX(p1)+dx+10;
+  var y=getY(p1)+dy-10;
   return [0,x,y];
 }
 function toggleMode() {
