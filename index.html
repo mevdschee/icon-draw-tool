@@ -73,6 +73,8 @@ function toggleMode() {
     p.push(x,y);
     point = lengths[mode]-1;
     points[selected]=p;
+    px=points[selected][point*2+1];
+    py=points[selected][point*2+2];
   }
 }
 function next() {
