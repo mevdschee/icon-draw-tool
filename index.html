@@ -84,6 +84,14 @@ function getSecondCurveDefault(mode,p1,p2,p3) {
     var my=p3[2];
     var x=ox+(ox-mx);
     var y=oy+(oy-my);
+  } else if (mode==3) {
+    var ox=getX(p1);
+    var oy=getY(p1); 
+    var m=getFirstCurveDefault(mode,p1,p2,p3);
+    var mx=m[1];
+    var my=m[2];
+    var x=getX(p2)+(ox-mx);
+    var y=getY(p2)+(oy-my);
   } else {
     var dx=Math.round((getX(p2)-getX(p1))/2);
     var dy=Math.round((getY(p2)-getY(p1))/2);
