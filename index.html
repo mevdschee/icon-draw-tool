@@ -46,18 +46,50 @@ function getY(p) {
   var i = lengths[p[0]]-1;
   return p[2+i*2];
 }
-function getFirstCurveDefault(p1,p2) {
-  var dx=Math.round((getX(p2)-getX(p1))/2);
-  var dy=Math.round((getY(p2)-getY(p1))/2);
-  var x=getX(p1)+dx-dy;
-  var y=getY(p1)+dy+dx;
+function getFirstCurveDefault(mode,p1,p2,p3) {
+  if (mode==2 && p1[0]==2) {
+    var ox=getX(p1);
+    var oy=getY(p1); 
+    var mx=p1[1];
+    var my=p1[2];
+    var x=ox+(ox-mx);
+    var y=oy+(oy-my);
+  } else if (mode==2 && p3!=undefined && p3[0]==2) {
+    var ox=getX(p2);
+    var oy=getY(p2); 
+    var mx=p3[1];
+    var my=p3[2];
+    var x=ox-(mx-ox);
+    var y=oy-(my-oy);
+  } else if (mode==3 && p1[0]==3) {
+    var ox=getX(p1);
+    var oy=getY(p1); 
+    var mx=p1[3];
+    var my=p1[4];
+    var x=ox+(ox-mx);
+    var y=oy+(oy-my);
+  } else {
+    var dx=Math.round((getX(p2)-getX(p1))/2);
+    var dy=Math.round((getY(p2)-getY(p1))/2);
+    var x=getX(p1)+dx-dy;
+    var y=getY(p1)+dy+dx;
+  }
   return [0,x,y];
 }
-function getSecondCurveDefault(p1,p2) {
-  var dx=Math.round((getX(p2)-getX(p1))/2);
-  var dy=Math.round((getY(p2)-getY(p1))/2);
-  var x=getX(p1)+dx+dy;
-  var y=getY(p1)+dy-dx;
+function getSecondCurveDefault(mode,p1,p2,p3) {
+  if (mode==3 && p3!=undefined && p3[0]==3) {
+    var ox=getX(p2);
+    var oy=getY(p2); 
+    var mx=p3[1];
+    var my=p3[2];
+    var x=ox+(ox-mx);
+    var y=oy+(oy-my);
+  } else {
+    var dx=Math.round((getX(p2)-getX(p1))/2);
+    var dy=Math.round((getY(p2)-getY(p1))/2);
+    var x=getX(p1)+dx+dy;
+    var y=getY(p1)+dy-dx;
+  }
   return [0,x,y];
 }
 function toggleMode() {
@@ -65,8 +97,8 @@ function toggleMode() {
     var mode = (points[selected][0]+1)%modes.length;
     var x = getX(points[selected]);
     var y = getY(points[selected]);
-    var p0 = getFirstCurveDefault(points[selected-1],points[selected]);
-    var p1 = getSecondCurveDefault(points[selected-1],points[selected]);
+    var p0 = getFirstCurveDefault(mode,points[selected-1],points[selected],points[selected+1]);
+    var p1 = getSecondCurveDefault(mode,points[selected-1],points[selected],points[selected+1]);
     var p = [mode];
     if (mode==2) p.push(p0[1],p0[2]);
     if (mode==3) p.push(p0[1],p0[2],p1[1],p1[2]);
@@ -137,6 +169,9 @@ function duplicatePoint() {
   py=Math.round((y+py)/2);
   points.splice(selected,0,[1,px,py]);
 }
+function mirrorControlPoint() {
+
+}
 function incrementSelected() {
   if (points.length==0) return;
   selected=(selected+1)%(points.length);
@@ -165,7 +200,8 @@ function onKeyPress(e) {
     case 8: previous(); break;
     case 46: deletePoint(); break;
     case 13: next(); break;
-    case 100: duplicatePoint(); break; 
+    case 100: duplicatePoint(); break;
+    case 109: mirrorControlPoint(); break; 
     case 32: toggleMode(); break;
     case 27: reset(); break;
   }
