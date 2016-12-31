@@ -4,9 +4,9 @@
 <title>SVG Draw Tool</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.1.6/zepto.min.js"></script>
 </head>
-<body style="margin:0; width: 100%;">
+<body style="margin:0;">
 <div id="panel" style="position: fixed; right:0; height: 100%; color: gray; background-color: rgba(205,205,205,.7); padding: 15px; z-index: 999;"></div>
-  <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" transform="scale(5)">
+  <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <pattern id="smallGrid" width="10" height="10" patternUnits="userSpaceOnUse">
         <path d="M 10 0 L 0 0 0 10" fill="none" stroke="gray" stroke-width="0.5"/>
@@ -19,12 +19,14 @@
         <rect width="2" height="2" fill="blue" />
       </marker>
     </defs>
+    <g transform="scale(5)">
     <rect width="100%" height="100%" fill="url(#grid)" />
     <path id="points" d="" marker-start="url(#marker)" marker-mid="url(#marker)" marker-end="url(#marker)" stroke="silver" fill="none" />
     <path id="path" d="" marker-start="url(#marker)" marker-mid="url(#marker)" marker-end="url(#marker)" fill="none" stroke="blue" />
     <path id="fill" d="" fill="blue" stroke="none" />
     <rect id="cursor" x="10" y="10" width="4" height="4" stroke="red" fill="none" transform="translate(-2,-2)"/>
     <rect id="point" x="10" y="10" width="2" height="2" stroke="none" fill="red" transform="translate(-1,-1)" />
+    </g>
   </svg>
 <script>
 var e = document.getElementById('input');
@@ -194,7 +196,7 @@ function reset() {
   fill=0;
   selected=0;
 }
-function onKeyPress(e) {
+function handleKey(e) {
   var evt = window.event? event : e;
   var key = evt.keyCode? evt.keyCode : evt.charCode;
   console.log(key,'pressed');
@@ -273,7 +275,7 @@ function updatePanel() {
   html+='</pre>';
   $('#panel').html(html);
 }
-document.onkeypress = onKeyPress;
+document.addEventListener("keydown", handleKey, false);
 draw();
 </script>
 </body>
