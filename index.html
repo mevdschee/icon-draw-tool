@@ -206,12 +206,12 @@ function handleKey(e) {
     case 38: if (py>=step) py-=step; else py=0; break; 
     case 37: if (px>=step) px-=step; else px=0; break;
     case 39: px+=step; break;
-    case 102: fill=(fill==1?0:1); break;
+    case 70: fill=(fill==1?0:1); break;
     case 8: previous(); break;
     case 46: deletePoint(); break;
     case 13: next(); break;
-    case 100: duplicatePoint(); break;
-    case 109: mirrorControlPoint(); break; 
+    case 68: duplicatePoint(); break;
+    case 77: mirrorControlPoint(); break; 
     case 32: toggleMode(); break;
     case 27: reset(); break;
   }
