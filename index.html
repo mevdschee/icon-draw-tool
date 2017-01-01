@@ -31,8 +31,8 @@
 <script>
 var e = document.getElementById('input');
 var d = document.getElementById('drawing');
-var modes = ['M','L','Q','C'];
-var lengths = [1,1,2,3];
+var modes = ['M','L','Q','C','n','u'];
+var lengths = [1,1,2,3,2,2];
 var px = 40;
 var py = 10;
 //var points = [[0,10,10],[1,10,40],[1,20,30],[1,50,60],[1,20,90],[1,10,80],[1,10,110],[1,40,110],[1,30,100],[1,60,70],[1,90,100],[1,80,110],[1,110,110],[1,110,80],[1,100,90],[1,70,60],[1,100,30],[1,110,40],[1,110,10],[1,80,10],[1,90,20],[1,60,50],[1,30,20],[1,40,10],[1,40,10]]; 
@@ -112,6 +112,8 @@ function toggleMode() {
     var p = [mode];
     if (mode==2) p.push(p0[1],p0[2]);
     if (mode==3) p.push(p0[1],p0[2],p1[1],p1[2]);
+    if (mode==4) p.push(p0[1],p0[2]);
+    if (mode==5) p.push(p1[1],p1[2]);
     p.push(x,y);
     point = lengths[mode]-1;
     points[selected]=p;
@@ -219,6 +221,22 @@ function handleKey(e) {
   points[selected][point*2+2]=py;
   draw();
 }
+function isLeft(ax,ay,bx,by,cx,cy){
+  return ((bx-ax)*(cy-ay)-(by-ay)*(cx-ax))>0;
+}
+function pointToRadius(sx,sy,cx,cy,ex,ey) {
+  var r = Math.sqrt(Math.pow(cx-sx,2)+Math.pow(cy-sy,2));
+  return r;
+}
+function makeArcs(path) {
+  var replaceCallback = function(match,sx,sy,op,cx,cy,ex,ey) { 
+    r = pointToRadius(sx,sy,cx,cy,ex,ey);
+    if (op=='n') op=isLeft(sx,sy,ex,ey,cx,cy)?'0 1 ':'1 1 ';
+    else op=isLeft(sx,sy,ex,ey,cx,cy)?'1 0 ':'0 0 ';
+    return sx+','+sy+'A'+r+','+r+' 0 '+op;
+  }
+  return path.replace(/([0-9\.]+),([0-9\.]+)(n|u)([0-9\.]+),([0-9\.]+) (?=([0-9\.]+),([0-9\.]+))/g, replaceCallback); 
+}
 function draw() {
   var path='';
   for (var i=0;i<points.length;i++) {
@@ -229,8 +247,11 @@ function draw() {
       case 1: path+=p[1]+','+p[2]; break;
       case 2: path+=p[1]+','+p[2]+' '+p[3]+','+p[4]; break;
       case 3: path+=p[1]+','+p[2]+' '+p[3]+','+p[4]+' '+p[5]+','+p[6]; break;
+      case 4: path+=p[1]+','+p[2]+' '+p[3]+','+p[4]; break;
+      case 5: path+=p[1]+','+p[2]+' '+p[3]+','+p[4]; break;
     }
   }
+  path = makeArcs(path);
   $('#path').attr('d',fill?'':path);
   $('#fill').attr('d',fill?path:'');
   path='';
@@ -250,6 +271,10 @@ function draw() {
     path+='L'+points[selected][1]+','+points[selected][2];
     path+='M'+getX(points[selected])+','+getY(points[selected]);
     path+='L'+points[selected][3]+','+points[selected][4];
+  }
+  if (points[selected][0]==4 || points[selected][0]==5) {
+    path+='M'+getX(points[selected-1])+','+getY(points[selected-1]);
+    path+='L'+points[selected][1]+','+points[selected][2];
   }
   $('#points').attr('d',fill?'':path);
   $('#cursor').attr('x',px).attr('y',py);
